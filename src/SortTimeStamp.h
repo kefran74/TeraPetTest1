@@ -3,6 +3,8 @@
 #include <iostream>
 #include <vector>
 
+#include <boost/filesystem.hpp>
+
 using namespace std;
 
 typedef struct sorted_data {
@@ -20,8 +22,11 @@ public:
     void ParseFile(void);
 
     char* FileName;
+
     vector<my_data> output_data;
 
 private: 
-    void Process( my_data* buffer, size_t len );
+    void process( my_data* buffer, size_t len );
+
+    void write_csv(std::string filename, std::vector<std::pair<std::string, std::vector<uint>>> dataset);
 };
