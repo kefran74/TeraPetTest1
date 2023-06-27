@@ -10,9 +10,6 @@
 using namespace std;
 
 
-
-
-
 int main (int argc, char* args[] ) 
 {
 	if( 0 == argc ) throw "missing argument: input raw data file";
