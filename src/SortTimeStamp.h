@@ -21,12 +21,15 @@ public:
 
     char* FileName;
 
-    vector<my_data> output_data;
+    
 
 private: 
 
     std::vector<uint> time;   // timestamps
     std::vector<uint> energy; // energy
+
+    // data pair to sort by time
+    std::vector<my_data> output_data;
 
     void process( my_data* buffer, size_t len );
 
