@@ -1,12 +1,11 @@
 # ignore binaries
 *.o
 obj/*
-SortTimeStamp
+*SortTimeStamp
 
 # ignore output files
 *.tsv
 tsv/*
 
-# ignore data files
-SortTimeStamp
+# ignore local config files
 .vscode/settings.json
