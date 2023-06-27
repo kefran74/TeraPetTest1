@@ -3,8 +3,6 @@
 #include <iostream>
 #include <vector>
 
-#include <boost/filesystem.hpp>
-
 using namespace std;
 
 typedef struct sorted_data {
