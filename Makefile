@@ -1,10 +1,10 @@
 all: SortTimeStamp clean
 
 SortTimeStamp: obj_dir main.o SortTimeStamp.o
-	g++ obj/SortTimeStamp.o obj/main.o /usr/local/lib/libboost_filesystem.a -o SortTimeStamp
+	g++ -std=c++14 -lboost_system -lboost_filesystem -O2 obj/SortTimeStamp.o obj/main.o /usr/local/lib/libboost_filesystem.a -o SortTimeStamp
 
 obj_dir:
-	mkdir obj
+	mkdir -p obj
 
 main.o: src/main.cpp
 	g++ -c src/main.cpp -o obj/main.o

@@ -5,10 +5,17 @@
 
 using namespace std;
 
-typedef struct sorted_data {
-	unsigned int timestamp;
-	unsigned int energy;
-} my_data;
+typedef struct header {
+	uint32_t event_nb;
+	uint32_t frame_Id;
+} frame_header;
+
+typedef struct event {
+	uint32_t time;
+	uint32_t energy;
+} event_data;
+
+
 
 class SortTimeStamp
 {
@@ -25,13 +32,13 @@ public:
 
 private: 
 
-    std::vector<uint> time;   // timestamps
-    std::vector<uint> energy; // energy
+    std::vector<uint32_t> time;   // timestamps
+    std::vector<uint32_t> energy; // energy
 
     // data pair to sort by time
-    std::vector<my_data> output_data;
+    std::vector<event_data> output_data;
 
-    void process( my_data* buffer, size_t len );
+    void processFrame( event_data* buffer, frame_header header );
 
     void write_tsv(std::string filename, std::vector<std::pair<std::string, std::vector<uint>>> dataset);
 };

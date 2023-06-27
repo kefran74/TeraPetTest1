@@ -12,7 +12,12 @@
 
 using namespace std;
 
+#define MAX_BUFFER_SIZE     5000000
+
+
+///////////////////////////////////////////////////////////
 // PUBLIC
+///////////////////////////////////////////////////////////
 
 // constructor
 SortTimeStamp::SortTimeStamp( char* fileName )
@@ -36,7 +41,10 @@ SortTimeStamp::SortTimeStamp( char* fileName )
 void SortTimeStamp::ParseFile( void )
 {
     size_t nRead = 0;
-	my_data* input = NULL;
+	event_data* input = NULL;
+    std::size_t buffer_size = 0;
+    std::streampos fileSize = 0;
+    frame_header header;
 
     // parse raw input binary file
 	cout << "Parsing raw file ..." << endl;
@@ -44,24 +52,46 @@ void SortTimeStamp::ParseFile( void )
 	std::ifstream ifs( this->FileName, std::ifstream::in );
 	if( ifs.fail() ) throw "error opening";
 
-	// limited buffer size to prevent memory overflow
-	const std::size_t BUFFER_SIZE = 1024;
-
-	// following will store time / energy combinations
-	char raw_input [BUFFER_SIZE];
-
-    while( ifs.read ( raw_input, sizeof(raw_input)) )
-	{
-		// cout << "read function returned " << ifs.gcount() << endl;
-
-		input = (my_data*)raw_input;
-    
-		this->process( input, ifs.gcount() / sizeof(my_data) );
+    // get input file size to adjust buffer
+    if( ifs.is_open() ) {
+        ifs.seekg(0, std::ios::end); // Move to the end of the file
+        fileSize = ifs.tellg(); // Get the file size
+        ifs.seekg(0, std::ios::beg); // Move back to the beginning of the file
+        cout << "File size: " << fileSize << " bytes" << std::endl;
     }
 
-    if( ! ifs.eof() ) throw "error reading";
+	// limited buffer size to prevent memory overflow
+    if ( fileSize > MAX_BUFFER_SIZE ){
+        buffer_size = MAX_BUFFER_SIZE;
+    }
+    else
+    {
+        buffer_size = fileSize;
+    }
 
-    this->process( input, ifs.gcount() / sizeof(my_data) );
+    cout << "Buffer size: " << buffer_size << " bytes" << std::endl;
+
+    char raw_input [buffer_size];
+
+    while( ! ifs.eof() )
+    {
+        // read frame header
+        ifs.read ( (char*)&header, sizeof(header));
+
+        cout << endl;
+        cout << ">>> Frame ID " << header.frame_Id << " contains " << header.event_nb << " events" << endl;
+
+        // read events from this frame
+        ifs.read ( raw_input, ( sizeof(event_data) * header.event_nb ));
+	
+		cout << "read function returned " << ifs.gcount() << " bytes" << endl;
+        
+        if (0 < ifs.gcount() ) 
+        {
+		    input = (event_data*)raw_input;
+		    this->processFrame( input, header );
+        }
+    }
 
     ifs.close();
 
@@ -74,12 +104,12 @@ void SortTimeStamp::ParseFile( void )
         // cout << "[" << x.timestamp << ", " << x.energy << "] " << endl;
 
         // split into 2 seperate uint vectors
-        this->time.push_back( x.timestamp );
+        this->time.push_back( x.time );
         this->energy.push_back( x.energy );
     }
 
      // Wrap into a vector
-    std::vector<std::pair<std::string, std::vector<uint>>> vals = { {"TimeStamp", this->time}, {"Energy", this->energy } };
+    std::vector<std::pair<std::string, std::vector<uint>>> vals = { {"Time", this->time}, {"Energy", this->energy } };
     
     // Write the vector to TSV
     this->write_tsv("output.tsv", vals);
@@ -91,17 +121,28 @@ void SortTimeStamp::ParseFile( void )
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-static bool compareTimeStamp( my_data data1, my_data data2)
+static bool compareTimeStamp( event_data data1, event_data data2)
 {
-    return ( data1.timestamp < data2.timestamp );
+    return ( data1.time < data2.time );
 }
 
-void SortTimeStamp::process( my_data* buffer, size_t len )
+void SortTimeStamp::processFrame( event_data* buffer, frame_header header )
 {
-	// cout << "process @ " << buffer << " with size " << len << endl;
+	cout << "process Frame Id " << header.frame_Id << ", with " << header.event_nb << " events" << endl;
     // cout << ".";
 
-	for( int i = 0; i < len; i++ )
+    if ( NULL == buffer ) {
+        cout << "NULL buffer " << endl;
+        return;
+    }
+
+    if( header.event_nb == 0 )
+    {
+        cout << "no Frames to process" << endl;
+        return;
+    }
+
+	for( int i = 0; i < header.event_nb; i++ )
 	{
         // display new sample
 		// cout << "data sample " << i << ": " << buffer[i].timestamp << "\t" << buffer[i].energy << endl;

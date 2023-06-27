@@ -10,3 +10,5 @@ tsv/*
 # ignore data files
 dat/*
 *.dat
+SortTimeStamp
+.vscode/settings.json
