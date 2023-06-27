@@ -11,3 +11,4 @@ tsv/*
 dat/*
 *.dat
 SortTimeStamp
+.vscode/settings.json
