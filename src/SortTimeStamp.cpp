@@ -12,7 +12,8 @@
 
 using namespace std;
 
-#define MAX_BUFFER_SIZE     5000000
+#define MAX_EVENTS_PER_FRAME     1023
+#define MAX_BUFFER_SIZE         5000000
 
 
 ///////////////////////////////////////////////////////////
@@ -42,8 +43,11 @@ void SortTimeStamp::ParseFile( void )
 {
     size_t nRead = 0;
 	event_data* input = NULL;
-    std::size_t buffer_size = 0;
-    std::streampos fileSize = 0;
+    std::size_t raw_buffer_size = 0;
+    std::size_t max_frame_size = 0;
+    std::size_t frame_size = 0;
+    std::size_t file_chunk_size = 0;
+
     frame_header header;
 
     // parse raw input binary file
@@ -55,43 +59,103 @@ void SortTimeStamp::ParseFile( void )
     // get input file size to adjust buffer
     if( ifs.is_open() ) {
         ifs.seekg(0, std::ios::end); // Move to the end of the file
-        fileSize = ifs.tellg(); // Get the file size
+        this->fileSize = ifs.tellg(); // Get the file size
         ifs.seekg(0, std::ios::beg); // Move back to the beginning of the file
-        cout << "File size: " << fileSize << " bytes" << std::endl;
+        cout << "### File size: " << fileSize << " bytes ###" << std::endl;
     }
 
-	// limited buffer size to prevent memory overflow
-    if ( fileSize > MAX_BUFFER_SIZE ){
-        buffer_size = MAX_BUFFER_SIZE;
+    // read max between file size and max buffer size
+    if( fileSize < MAX_BUFFER_SIZE )
+    {
+        raw_buffer_size = fileSize;
     }
     else
     {
-        buffer_size = fileSize;
+        raw_buffer_size = MAX_BUFFER_SIZE;
     }
 
-    cout << "Buffer size: " << buffer_size << " bytes" << std::endl;
+    // nomore than 1023 events per frame = 8184 bytes max per frame
+    max_frame_size = MAX_EVENTS_PER_FRAME * sizeof(event_data);
 
-    char raw_input [buffer_size];
+    // hold a chunk of file
+    char raw_input [raw_buffer_size];
 
-    while( ! ifs.eof() )
-    {
-        // read frame header
-        ifs.read ( (char*)&header, sizeof(header));
+    // point to the current frame
+    char* frame = NULL;
+
+    // read file in chunks
+    while( remainingBytesToRead )
+	{
+        // check file remaining size
+        this->currentPosition = ifs.tellg();
+
+        this->remainingBytesToRead = this->fileSize - this->currentPosition;
 
         cout << endl;
-        cout << ">>> Frame ID " << header.frame_Id << " contains " << header.event_nb << " events" << endl;
+        cout << "current position " << this->currentPosition << ", " << this->remainingBytesToRead << " remaining Bytes to Read" << endl;
 
-        // read events from this frame
-        ifs.read ( raw_input, ( sizeof(event_data) * header.event_nb ));
-	
-		cout << "read function returned " << ifs.gcount() << " bytes" << endl;
-        
-        if (0 < ifs.gcount() ) 
+        // read accordingly
+        if( this->remainingBytesToRead > raw_buffer_size )
         {
-		    input = (event_data*)raw_input;
-		    this->processFrame( input, header );
+            ifs.read ( raw_input, raw_buffer_size );
         }
-    }
+        else
+        {
+            ifs.read ( raw_input, this->remainingBytesToRead );
+        }
+
+        file_chunk_size = ifs.gcount();
+
+		cout << "read function returned " << file_chunk_size << " bytes, current position " << currentPosition << endl;
+
+        if ( file_chunk_size == 0 ) break;
+        
+        uint i = 0;
+
+        // poll through each frame within file chunk
+        while( i < file_chunk_size )
+        {
+            // cout << "Current Frame Pointer = " << i << endl;
+
+            // update frame pointer
+            frame = raw_input+i;
+
+            // check frame header
+            std::memcpy((char*)&header, frame, sizeof(header));
+            // cout << "Frame ID " << header.frame_Id << " contains " << header.event_nb << " events" << endl;
+
+            frame_size = header.event_nb * sizeof(event_data);
+
+            // cout << "Frame Size " << frame_size << " Bytes" << endl;
+
+            // if this file chunk contains the entire frame, process it
+            if( ( file_chunk_size - i ) > frame_size )
+            {
+                // process Frame
+                input = (event_data*)(frame+8);
+	 	        this->processFrame( input, header );
+                // update frame pointer
+                i += frame_size + sizeof(header);
+            }
+            else
+            {
+                // otherwise rewind the file pointer, so the next file chunk starts exactly at the next frame header
+                cout << "rewind last " << ( file_chunk_size - i ) << " bytes of this file chunk" << endl;
+
+                this->nextPosition = this->currentPosition + i ;
+
+                cout << "seek to " << this->nextPosition << " to read next header" << endl;
+
+                ifs.seekg( this->nextPosition );
+                // exit this chunk loop
+                break;
+            }
+        } // while(  i < file_chunk_size )
+
+        cout << "End of chunk, " << i << " bytes processed" << endl;
+
+    }   // while ( remainingBytesToRead )
+
 
     ifs.close();
 
@@ -128,7 +192,7 @@ static bool compareTimeStamp( event_data data1, event_data data2)
 
 void SortTimeStamp::processFrame( event_data* buffer, frame_header header )
 {
-	cout << "process Frame Id " << header.frame_Id << ", with " << header.event_nb << " events" << endl;
+	// cout << "process Frame Id " << header.frame_Id << ", with " << header.event_nb << " events" << endl;
     // cout << ".";
 
     if ( NULL == buffer ) {
