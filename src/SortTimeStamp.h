@@ -32,6 +32,13 @@ public:
 
 private: 
 
+    // used to handle file chunks
+    std::streampos fileSize = 0;
+    std::streampos currentPosition = 0;
+    std::streampos nextPosition = 0;
+    std::streampos remainingBytesToRead = 1;
+
+    // data vectors
     std::vector<uint32_t> time;   // timestamps
     std::vector<uint32_t> energy; // energy
 
