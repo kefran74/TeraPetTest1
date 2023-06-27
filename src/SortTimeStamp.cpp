@@ -68,16 +68,22 @@ void SortTimeStamp::ParseFile( void )
 
 	cout << endl;
 
-    // print final sorted vector
+    // print and split final sorted vector
     cout << "Data sorted by time stamp : \n";
     for (auto x : this->output_data)
+    {
         cout << "[" << x.timestamp << ", " << x.energy << "] " << endl;
 
+        // split into 2 seperate uint vectors
+        this->time.push_back( x.timestamp );
+        this->energy.push_back( x.energy );
+    }
+
      // Wrap into a vector
-    std::vector<std::pair<std::string, std::vector<int>>> vals = {{"TimeStamp", vec1}, {"Two", vec2}, {"Three", vec3}};
+    std::vector<std::pair<std::string, std::vector<uint>>> vals = { {"TimeStamp", this->time}, {"Energy", this->energy } };
     
-    // Write the vector to CSV
-    write_csv("two_cols.tsv", vals);
+    // Write the vector to TSV
+    write_tsv("tsv/output.tsv", vals);
 }
 
 
@@ -108,16 +114,20 @@ void SortTimeStamp::process( my_data* buffer, size_t len )
     // sort vector with timestamps
     sort (this->output_data.begin(), this->output_data.end(), compareTimeStamp);
 
-    cout << "Data sorted by time stamp : \n";
-    for (auto x : this->output_data)
-        cout << "[" << x.timestamp << ", " << x.energy << "] " << endl;
+    // cout << "Data sorted by time stamp : \n";
+
+    // for (auto x : this->output_data)
+    // {
+    //     cout << "[" << x.timestamp << ", " << x.energy << "] " << endl;
+    // }
 }
 
 
-void SortTimeStamp::write_csv(std::string filename, std::vector<std::pair<std::string, std::vector<uint>>> dataset){
-    // Make a CSV file with 2 columns of integer values
+void SortTimeStamp::write_tsv(std::string filename, std::vector<std::pair<std::string, std::vector<uint>>> dataset)
+{
+    // Make a TSV file with 2 columns of integer values
     // Each column of data is represented by the pair <column name, column data>
-    //   as std::pair<std::string, std::vector<int>>
+    //   as std::pair<std::string, std::vector<uint>>
     // The dataset is represented as a vector of these columns
     // Note that all columns should be the same size
     
@@ -128,7 +138,7 @@ void SortTimeStamp::write_csv(std::string filename, std::vector<std::pair<std::s
     for(int j = 0; j < dataset.size(); ++j)
     {
         myFile << dataset.at(j).first;
-        if(j != dataset.size() - 1) myFile << ","; // No comma at end of line
+        if(j != dataset.size() - 1) myFile << "\t"; // No tab at end of line
     }
     myFile << "\n";
     
@@ -138,7 +148,7 @@ void SortTimeStamp::write_csv(std::string filename, std::vector<std::pair<std::s
         for(int j = 0; j < dataset.size(); ++j)
         {
             myFile << dataset.at(j).second.at(i);
-            if(j != dataset.size() - 1) myFile << ","; // No comma at end of line
+            if(j != dataset.size() - 1) myFile << "\t"; // No comma at end of line
         }
         myFile << "\n";
     }

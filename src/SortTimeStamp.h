@@ -26,7 +26,11 @@ public:
     vector<my_data> output_data;
 
 private: 
+
+    std::vector<uint> time;   // timestamps
+    std::vector<uint> energy; // energy
+
     void process( my_data* buffer, size_t len );
 
-    void write_csv(std::string filename, std::vector<std::pair<std::string, std::vector<uint>>> dataset);
+    void write_tsv(std::string filename, std::vector<std::pair<std::string, std::vector<uint>>> dataset);
 };
