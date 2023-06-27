@@ -6,3 +6,7 @@ SortTimeStamp
 # ignore output files
 *.tsv
 tsv/*
+
+# ignore data files
+dat/*
+*.dat
