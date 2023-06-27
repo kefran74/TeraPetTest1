@@ -12,8 +12,12 @@
 
 using namespace std;
 
+using namespace boost;
+
 #define MAX_EVENTS_PER_FRAME     1023
 #define MAX_BUFFER_SIZE         5000000
+
+static bool compareTimeStamp( event_data data1, event_data data2);
 
 
 ///////////////////////////////////////////////////////////
@@ -156,10 +160,12 @@ void SortTimeStamp::ParseFile( void )
 
     }   // while ( remainingBytesToRead )
 
-
     ifs.close();
 
-	cout << endl;
+	cout << " Sort vector" << endl;
+
+    // sort vector with timestamps
+    sort (this->output_data.begin(), this->output_data.end(), compareTimeStamp);
 
     // print and split final sorted vector
     // cout << "Data sorted by time stamp : \n";
@@ -192,8 +198,8 @@ static bool compareTimeStamp( event_data data1, event_data data2)
 
 void SortTimeStamp::processFrame( event_data* buffer, frame_header header )
 {
-	// cout << "process Frame Id " << header.frame_Id << ", with " << header.event_nb << " events" << endl;
-    // cout << ".";
+	cout << "process Frame Id " << header.frame_Id << ", with " << header.event_nb << " events" << endl;
+    //cout << ".";
 
     if ( NULL == buffer ) {
         cout << "NULL buffer " << endl;
@@ -206,6 +212,7 @@ void SortTimeStamp::processFrame( event_data* buffer, frame_header header )
         return;
     }
 
+    // fill data vector
 	for( int i = 0; i < header.event_nb; i++ )
 	{
         // display new sample
@@ -214,9 +221,7 @@ void SortTimeStamp::processFrame( event_data* buffer, frame_header header )
         // add it to vector
         this->output_data.push_back(buffer[i]);
     }
-
-    // sort vector with timestamps
-    sort (this->output_data.begin(), this->output_data.end(), compareTimeStamp);
+    //this->output_data.insert(output_data.end(), buffer, )
 
     // cout << "Data sorted by time stamp : \n";
     // for (auto x : this->output_data) {
