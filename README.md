@@ -7,7 +7,10 @@ Install the following packages to build the c++ source code:
 
 Install the latest Boost library from https://www.boost.org/
 
-Extract the following source code or clone it from GIT repository
+Extract the following source code or clone it from GIT repository:
+https://github.com/kefran74/TeraPetTest1
+
+Make sure you adjust the makefile reference to your Boost installation folder if not in /usr/local/lib
 
 Build the app:
 > make clean all

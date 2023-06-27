@@ -1,4 +1,4 @@
-all: SortTimeStamp clean
+all: SortTimeStamp
 
 SortTimeStamp: obj_dir main.o SortTimeStamp.o
 	g++ -std=c++14 -lboost_filesystem -O2 obj/SortTimeStamp.o obj/main.o /usr/local/lib/libboost_filesystem.a -o SortTimeStamp
@@ -14,6 +14,7 @@ SortTimeStamp.o: src/SortTimeStamp.cpp
 
 clean:
 	rm -rf obj
+	rm SortTimeStamp
 
 install:
 	cp SortTimeStamp /usr/local/bin/
