@@ -15,20 +15,16 @@ typedef struct event {
 	uint32_t energy;
 } event_data;
 
-
-
 class SortTimeStamp
 {
 
 public:
-    // Constructeurs
+    // Constructor
     SortTimeStamp( char* inFileName );
 
-    void ParseFile(void);
+    void LoadRawData( void );
 
-    char* FileName;
-
-    
+    void SortEvents( void );
 
 private: 
 
@@ -45,7 +41,9 @@ private:
     // data pair to sort by time
     std::vector<event_data> output_data;
 
+    char* FileName = NULL;
+
     void processFrame( event_data* buffer, frame_header header );
 
-    void write_tsv(std::string filename, std::vector<std::pair<std::string, std::vector<uint>>> dataset);
+    void writeTsv(std::string filename, std::vector<std::pair<std::string, std::vector<uint>>> dataset);
 };
