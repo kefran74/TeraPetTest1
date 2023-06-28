@@ -136,7 +136,7 @@ void SortTimeStamp::ParseFile( void )
             if( ( file_chunk_size - i ) > frame_size )
             {
                 // process Frame
-                input = (event_data*)(frame+8);
+                input = (event_data*)(frame+sizeof(header));
 	 	        this->processFrame( input, header );
                 // update frame pointer
                 i += frame_size + sizeof(header);
