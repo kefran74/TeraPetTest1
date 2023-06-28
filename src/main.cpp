@@ -11,6 +11,10 @@ int main (int argc, char* args[] )
 	
 	SortTimeStamp* my_sort = new SortTimeStamp( args[1] );
 
-	my_sort->ParseFile();
+	// Task 1: Loading the raw data
+	my_sort->LoadRawData();
+
+	// Task 2: Sorting events by timestamp, into a tsv file.
+	my_sort->SortEvents();
 
 }
