@@ -14,9 +14,16 @@ using namespace std;
 
 using namespace boost;
 
+
+// DEFINES
+//////////////////////////////////////////////////////////
+
 #define MAX_EVENTS_PER_FRAME     1023
 #define MAX_BUFFER_SIZE         5000000
 
+/**
+ * forward declaration to use 
+*/
 static bool compareTimeStamp( event_data data1, event_data data2);
 
 
@@ -24,7 +31,14 @@ static bool compareTimeStamp( event_data data1, event_data data2);
 // PUBLIC
 ///////////////////////////////////////////////////////////
 
-// constructor
+
+/** 
+ * constructor
+ * 
+ \param[in]  input data file to sort
+
+ \returns   class instantiation
+*/
 SortTimeStamp::SortTimeStamp( char* fileName )
 {
     cout << "Constructor uses dat file " << fileName << endl;
@@ -43,19 +57,26 @@ SortTimeStamp::SortTimeStamp( char* fileName )
 }
 
 
-void SortTimeStamp::ParseFile( void )
+/** 
+ * ParseFile: get raw data from file, sort events by timestamps
+ * 
+ \param[in]  none
+
+ \returns   none
+*/
+void SortTimeStamp::LoadRawData( void )
 {
-    size_t nRead = 0;
-	event_data* input = NULL;
+	// store Frame header and events
+    frame_header header;
+    event_data* input = NULL;
+
+    // used to handle file chunk size and frame size
     std::size_t raw_buffer_size = 0;
-    std::size_t max_frame_size = 0;
     std::size_t frame_size = 0;
     std::size_t file_chunk_size = 0;
 
-    frame_header header;
-
     // parse raw input binary file
-	cout << "Parsing raw file ..." << endl;
+	cout << "Parsing input data file ..." << endl;
 
 	std::ifstream ifs( this->FileName, std::ifstream::in );
 	if( ifs.fail() ) throw "error opening";
@@ -78,9 +99,6 @@ void SortTimeStamp::ParseFile( void )
         raw_buffer_size = MAX_BUFFER_SIZE;
     }
 
-    // nomore than 1023 events per frame = 8184 bytes max per frame
-    max_frame_size = MAX_EVENTS_PER_FRAME * sizeof(event_data);
-
     // hold a chunk of file
     char raw_input [raw_buffer_size];
 
@@ -88,7 +106,7 @@ void SortTimeStamp::ParseFile( void )
     char* frame = NULL;
 
     // read file in chunks
-    while( remainingBytesToRead )
+    while( this->remainingBytesToRead )
 	{
         // check file remaining size
         this->currentPosition = ifs.tellg();
@@ -136,7 +154,7 @@ void SortTimeStamp::ParseFile( void )
             if( ( file_chunk_size - i ) > frame_size )
             {
                 // process Frame
-                input = (event_data*)(frame+8);
+                input = (event_data*)(frame+sizeof(header));
 	 	        this->processFrame( input, header );
                 // update frame pointer
                 i += frame_size + sizeof(header);
@@ -162,6 +180,19 @@ void SortTimeStamp::ParseFile( void )
 
     ifs.close();
 
+}
+
+
+/** 
+ * ParseFile: get raw data from file, sort events by timestamps
+ * 
+ \param[in]  none
+
+ \returns   none
+*/
+void SortTimeStamp::SortEvents( void )
+{
+
 	cout << " Sort vector" << endl;
 
     // sort vector with timestamps
@@ -182,7 +213,7 @@ void SortTimeStamp::ParseFile( void )
     std::vector<std::pair<std::string, std::vector<uint>>> vals = { {"Time", this->time}, {"Energy", this->energy } };
     
     // Write the vector to TSV
-    this->write_tsv("output.tsv", vals);
+    this->writeTsv("output.tsv", vals);
 }
 
 
@@ -190,12 +221,28 @@ void SortTimeStamp::ParseFile( void )
 // PRIVATE
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/** 
+ * compareTimeStamp: static method used by the sort method used to process frames
+ * 
+ \param[in]  event_data data1: a first data tuple that concatenate timestamp and corresponding energy
 
+ \param[in]  event_data data2: a second data tuple that concatenate timestamp and corresponding energy
+
+ \returns   true if event 1 timestamp smaller than event 2, false otherwise
+*/
 static bool compareTimeStamp( event_data data1, event_data data2)
 {
     return ( data1.time < data2.time );
 }
 
+
+/** 
+ * processFrame: process a list of events and store them in a vector for post processing.
+ * 
+ \param[in]  event_data* buffer: a pointer to a list of events contained in a frame
+
+ \param[in]  frame_header header:frame header to indicate Frame ID and size
+*/
 void SortTimeStamp::processFrame( event_data* buffer, frame_header header )
 {
 	cout << "process Frame Id " << header.frame_Id << ", with " << header.event_nb << " events" << endl;
@@ -221,16 +268,17 @@ void SortTimeStamp::processFrame( event_data* buffer, frame_header header )
         // add it to vector
         this->output_data.push_back(buffer[i]);
     }
-    //this->output_data.insert(output_data.end(), buffer, )
-
-    // cout << "Data sorted by time stamp : \n";
-    // for (auto x : this->output_data) {
-    //     cout << "[" << x.timestamp << ", " << x.energy << "] " << endl;
-    // }
 }
 
 
-void SortTimeStamp::write_tsv(std::string filename, std::vector<std::pair<std::string, std::vector<uint>>> dataset)
+/** 
+ * writeTsv: store the output data in tsv file.
+ * 
+ \param[in] std::string filename: output file name to store result
+
+ \param[in]  dataset: vector formatted output data to be written in tsv file.
+*/
+void SortTimeStamp::writeTsv(std::string filename, std::vector<std::pair<std::string, std::vector<uint>>> dataset)
 {
     // Make a TSV file with 2 columns of integer values
     // Each column of data is represented by the pair <column name, column data>
@@ -238,7 +286,7 @@ void SortTimeStamp::write_tsv(std::string filename, std::vector<std::pair<std::s
     // The dataset is represented as a vector of these columns
     // Note that all columns should be the same size
 
-    cout << "write_tsv file " << filename << " with " << dataset.size() << " columns" << endl;
+    cout << "writeTsv file " << filename << " with " << dataset.size() << " columns" << endl;
     
     // Create an output filestream object
     std::ofstream myFile(filename);

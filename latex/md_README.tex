@@ -1,0 +1,23 @@
+\hypertarget{md_README_autotoc_md1}{}\doxysection{Build Instructions for a ubuntu desktop}\label{md_README_autotoc_md1}
+Install the following packages to build the c++ source code\+: \begin{quote}
+sudo apt install g++ build-\/essentials \end{quote}
+
+
+Install the latest Boost library from \href{https://www.boost.org/}{\texttt{ https\+://www.\+boost.\+org/}}
+
+Extract the following source code or clone it from G\+IT repository\+: \href{https://github.com/kefran74/TeraPetTest1}{\texttt{ https\+://github.\+com/kefran74/\+Tera\+Pet\+Test1}}
+
+Make sure you adjust the makefile reference to your Boost installation folder if not in /usr/local/lib
+
+Build the app\+: \begin{quote}
+make clean all \end{quote}
+
+
+Install the app\+: \begin{quote}
+sudo make install \end{quote}
+\hypertarget{md_README_autotoc_md2}{}\doxysection{usage}\label{md_README_autotoc_md2}
+call the program \char`\"{}\+Sort\+Time\+Stamp /my/data/file\char`\"{}
+
+It will process it and produce a file called output.\+tsv with the sorted timestamps.
+
+Enjoy 

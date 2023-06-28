@@ -14,7 +14,7 @@ SortTimeStamp.o: src/SortTimeStamp.cpp
 
 clean:
 	rm -rf obj
-	rm SortTimeStamp
+	rm -f SortTimeStamp
 
 install:
 	cp SortTimeStamp /usr/local/bin/

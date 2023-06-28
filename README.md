@@ -17,3 +17,11 @@ Build the app:
 
 Install the app:
 > sudo make install
+
+## usage
+
+call the program "SortTimeStamp /my/data/file"
+
+It will process it and produce a file called output.tsv with the sorted timestamps.
+
+Enjoy
